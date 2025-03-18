@@ -30,6 +30,11 @@ window.onload = function(){
                 .attr("y", 50) //position from top on the y (vertical) axis
                 .style("fill", "#FFFFFF"); //fill color
 
+                var x = d3.scaleLinear() //create the scale
+                .range([90, 810]) //output min and max
+                .domain([0, 3]); //input min and max
+
+                // Define the cityPop array
                 var cityPop = [
                     { 
                         city: 'Madison',
@@ -48,27 +53,82 @@ window.onload = function(){
                         population: 27244
                     }
                 ];
-            
-                //Example 2.6 line 3
-                var circles = container.selectAll(".circles") //create an empty selection
-                    .data(cityPop) //here we feed in an array
-                    .enter() //one of the great mysteries of the universe
-                    .append("circle") //inspect the HTML--holy crap, there's some circles there
+
+                // Above Example 2.8 line 20: Create the x scale
+                var x = d3.scaleLinear() // Create the scale
+                    .range([90, 810]) // Output min and max
+                    .domain([0, 3]); // Input min and max
+
+                // Above Example 2.8 line 20: Calculate population range for y scale
+                var minPop = d3.min(cityPop, function(d) {
+                    return d.population;
+                });
+                var maxPop = d3.max(cityPop, function(d) {
+                    return d.population;
+                });
+
+                // Create the y scale
+                var y = d3.scaleLinear()
+                    .range([450, 50]) // Adjusted range to fill the inner rectangle
+                    .domain([0, 700000]); // Fixed domain to fit chart title and axis
+
+                // Above Example 2.8 line 20: Add the color scale generator
+                var color = d3.scaleLinear()
+                    .range(["#FDBE85", "#D94701"]) // Gradient from light to dark orange
+                    .domain([minPop, maxPop]);
+
+                // Add circles to the container
+                var circles = container.selectAll(".circles") // Create an empty selection
+                    .data(cityPop) // Feed in an array
+                    .enter()
+                    .append("circle")
                     .attr("class", "circles")
-                    .attr("id", function(d){
-                        return d.city;
+                    .attr("id", function(d) { return d.city; })
+                    .attr("r", function(d) {
+                        var area = d.population * 0.01; // Calculate radius based on population
+                        return Math.sqrt(area / Math.PI);
                     })
-                    .attr("r", function(d){
-                        //calculate the radius based on population value as circle area
-                        var area = d.population * 0.01;
-                        return Math.sqrt(area/Math.PI);
-                    })
-                    .attr("cx", function(d, i){
-                        //use the index to place each circle horizontally
-                        return 90 + (i * 180);
-                    })
-                    .attr("cy", function(d){
-                        //subtract value from 450 to "grow" circles up from the bottom instead of down from the top of the SVG
-                        return 450 - (d.population * 0.0005);
-                    });
-};
+                    .attr("cx", function(d, i) { return x(i); }) // Use x scale for horizontal positioning
+                    .attr("cy", function(d) { return y(d.population); }) // Use y scale for vertical positioning
+                    .style("fill", function(d) { return color(d.population); }) // Color based on population
+                    .style("stroke", "#000"); // Black stroke for the circles
+
+                // Example 3.6 and 3.7: Create and add the y-axis
+                var yAxis = d3.axisLeft(y); // Create a y-axis generator
+                var axis = container.append("g")
+                    .attr("class", "axis")
+                    .attr("transform", "translate(50, 0)") // Move the axis 50px to the right
+                    .call(yAxis); // Add the y-axis
+
+                // Example 3.12: Add a title to the chart
+                var title = container.append("text")
+                    .attr("class", "title")
+                    .attr("text-anchor", "middle")
+                    .attr("x", 450) // Center title horizontally
+                    .attr("y", 30) // Position title near the top
+                    .text("City Populations");
+
+                // Example 3.14: Create circle labels
+                var labels = container.selectAll(".labels")
+                    .data(cityPop)
+                    .enter()
+                    .append("text")
+                    .attr("class", "labels")
+                    .attr("text-anchor", "left")
+                    .attr("y", function(d) { return y(d.population) + 5; });
+
+                // First line of label: City name
+                var nameLine = labels.append("tspan")
+                    .attr("class", "nameLine")
+                    .attr("x", function(d, i) { return x(i) + Math.sqrt(d.population * 0.01 / Math.PI) + 5; })
+                    .text(function(d) { return d.city; });
+
+                // Second line of label: Population
+                // Example 3.17: Formatting population numbers
+                var format = d3.format(",");
+                var popLine = labels.append("tspan")
+                    .attr("class", "popLine")
+                    .attr("x", function(d, i) { return x(i) + Math.sqrt(d.population * 0.01 / Math.PI) + 5; })
+                    .attr("dy", "15") // Vertical offset for the second line
+                    .text(function(d) { return "Pop. " + format(d.population); });
+                }
