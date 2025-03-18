@@ -17,6 +17,16 @@ window.onload = function(){
 
            //innerRect block
             var innerRect = container.append("rect") //put a new rect in the svg
-            .attr("width", 800) //rectangle width
-            .attr("height", 400) //rectangle height
+
+                .datum(400) //a single value is a datum
+                .attr("width", function(d){ //rectangle width
+                    return d * 2; //400 * 2 = 800
+                }) 
+                .attr("height", function(d){ //rectangle height
+                    return d; //400
+                })
+                .attr("class", "innerRect") //class name
+                .attr("x", 50) //position from left on the x (horizontal) axis
+                .attr("y", 50) //position from top on the y (vertical) axis
+                .style("fill", "#FFFFFF"); //fill color
 };
