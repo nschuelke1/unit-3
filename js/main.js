@@ -131,4 +131,4 @@ window.onload = function(){
                     .attr("x", function(d, i) { return x(i) + Math.sqrt(d.population * 0.01 / Math.PI) + 5; })
                     .attr("dy", "15") // Vertical offset for the second line
                     .text(function(d) { return "Pop. " + format(d.population); });
-                }
+            }
