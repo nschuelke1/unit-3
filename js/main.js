@@ -15,12 +15,10 @@ function setMap() {
         .attr("height", height);
 
     // Choose a projection suitable for North America and Europe
-    var projection = d3.geoConicEqualArea()
-        .center([-15, 45]) // Adjust to focus on North America and Europe
-        .rotate([90, 0])   // Rotate globe for better alignment
-        .parallels([30, 60]) // Secant case with standard parallels
-        .scale(300)        // Adjust scaling to fit map dimensions
-        .translate([width / 2, height / 2]); // Center the map in the SVG container
+    var projection = d3.geoMercator()
+        .center([10, 50]) // Adjust to focus on North America and Europe
+        .scale(500)      // Adjust scaling to fit the SVG dimensions
+        .translate([width / 2, height / 2]); // Center the map in the container
 
     // Create a path generator using the projection
     var path = d3.geoPath().projection(projection);
