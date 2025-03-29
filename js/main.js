@@ -40,9 +40,6 @@ function setMap() {
         worldCountries = topojson.feature(world, world.objects.ne_110m_admin_0_countries).features;
         console.log("World Data Structure:", world);
         console.log("Available Objects in TopoJSON:", Object.keys(world.objects));
-        console.log("World Data Structure:", world); // Check the structure of the loaded TopoJSON data
-        console.log("GeoJSON Conversion Test:", topojson.feature(world, world.objects.ne_110m_admin_0_countries));
-        console.log("World Data:", world);
 
         // Match GeoJSON countries with CSV data
         worldCountries.forEach(country => {
@@ -70,15 +67,15 @@ function setMap() {
         // Log for debugging
         console.log("CSV Data Loaded:", csvData);
         console.log("GeoJSON Data Loaded:", worldCountries[0]);
+
+        // Log GeoJSON country names here, where the data is ready
+        console.log("GeoJSON Country Names:");
+        worldCountries.forEach(country => console.log(country.properties.NAME));
     });
 
     // Access globally after Promise resolves
     setTimeout(() => {
         console.log("CSV Data Globally Accessible:", csvData); // Should now be available
-        console.log("GeoJSON Data Globally Accessible:", worldCountries[0]); // Should now be available
+        console.log("GeoJSON Data Globally Accessible:", worldCountries ? worldCountries[0] : "worldCountries undefined"); // Guard against undefined
     }, 1000); // Delay to ensure data is loaded
-
-console.log("GeoJSON Country Names:");
-worldCountries.forEach(country => console.log(country.properties.NAME));
-
 }
