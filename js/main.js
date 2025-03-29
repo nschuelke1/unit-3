@@ -65,4 +65,8 @@ function setMap() {
         console.log(csvData);
         console.log(worldCountries);
     }
+    console.log("CSV Data Loaded:", csvData); // After loading the CSV
+    console.log("GeoJSON Data Loaded:", worldCountries[0]); // After translating TopoJSON to GeoJSON
+    console.log("CSV Data Example:", csvData[0]); // First row of CSV data
+    console.log("GeoJSON Country Example:", worldCountries[0].properties.NAME); // First country name
 }
