@@ -1,11 +1,13 @@
 // Begin script when the window loads
 window.onload = setMap;
 
-// Set up the choropleth map
+// Declare globally
+let csvData; 
+let worldCountries;
+
 function setMap() {
     // Map frame dimensions
-    var width = 960,
-        height = 500;
+    var width = 960, height = 500;
 
     // Create an SVG container for the map
     var map = d3.select("body")
@@ -28,20 +30,24 @@ function setMap() {
         d3.csv("data/nato.csv"), // Load attributes from CSV
         d3.json("data/world.topojson") // Load background spatial data
     ];
-    Promise.all(promises).then(callback);
 
-    function callback(data) {
-        // Assign the loaded datasets to variables
-        var csvData = data[0], // NATO CSV data
-            world = data[1];   // World TopoJSON data
+    Promise.all(promises).then(function (data) {
+        // Assign globally
+        csvData = data[0]; // NATO CSV data
+        var world = data[1]; // World TopoJSON data
 
         // Translate TopoJSON to GeoJSON
-        var worldCountries = topojson.feature(world, world.objects.ne_110m_admin_0_countries).features;
+        worldCountries = topojson.feature(world, world.objects.ne_110m_admin_0_countries).features;
+        console.log("World Data Structure:", world);
+        console.log("Available Objects in TopoJSON:", Object.keys(world.objects));
+        console.log("World Data Structure:", world); // Check the structure of the loaded TopoJSON data
+        console.log("GeoJSON Conversion Test:", topojson.feature(world, world.objects.ne_110m_admin_0_countries));
+        console.log("World Data:", world);
 
         // Match GeoJSON countries with CSV data
         worldCountries.forEach(country => {
-            let csvRow = csvData.find(row => row.Name === country.properties.NAME); // Match by country name
-            country.properties.gdpSpending = csvRow ? csvRow["2023"] : null; // Add GDP data to GeoJSON properties
+            let csvRow = csvData.find(row => row.Country === country.properties.NAME); // Match by country name
+            country.properties.gdpSpending = csvRow ? csvRow["2023e"] : null; // Add GDP data to GeoJSON properties
         });
 
         // Create individual paths for each country
@@ -49,24 +55,30 @@ function setMap() {
             .data(worldCountries) // Bind GeoJSON features
             .enter()
             .append("path")
-            .attr("class", function(d) {
+            .attr("class", function (d) {
                 return "country " + d.properties.NAME; // Unique class based on country name
             })
             .attr("d", path) // Apply GeoPath generator
-            .style("fill", function(d) {
+            .style("fill", function (d) {
                 // Style dynamically based on GDP spending
                 if (d.properties.gdpSpending) {
-                    return d.properties.gdpSpending > 1000 ? "#ff0000" : "#00ff00"; // Example: High GDP in red, low in green
+                    return d.properties.gdpSpending > 1.5 ? "#ff0000" : "#00ff00"; // Example: High GDP in red, low in green
                 }
                 return "#ccc"; // Default color if GDP data is missing
             });
 
         // Log for debugging
-        console.log(csvData);
-        console.log(worldCountries);
-    }
-    console.log("CSV Data Loaded:", csvData); // After loading the CSV
-    console.log("GeoJSON Data Loaded:", worldCountries[0]); // After translating TopoJSON to GeoJSON
-    console.log("CSV Data Example:", csvData[0]); // First row of CSV data
-    console.log("GeoJSON Country Example:", worldCountries[0].properties.NAME); // First country name
+        console.log("CSV Data Loaded:", csvData);
+        console.log("GeoJSON Data Loaded:", worldCountries[0]);
+    });
+
+    // Access globally after Promise resolves
+    setTimeout(() => {
+        console.log("CSV Data Globally Accessible:", csvData); // Should now be available
+        console.log("GeoJSON Data Globally Accessible:", worldCountries[0]); // Should now be available
+    }, 1000); // Delay to ensure data is loaded
+
+console.log("GeoJSON Country Names:");
+worldCountries.forEach(country => console.log(country.properties.NAME));
+
 }
