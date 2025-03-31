@@ -2,8 +2,8 @@
 window.onload = setMap;
 
 // Declare globally
-let csvData; 
-let europeanCountries;
+let csvData;
+let usStates; // Updated variable name for states
 
 function setMap() {
     // Map frame dimensions
@@ -16,10 +16,9 @@ function setMap() {
         .attr("width", width)
         .attr("height", height);
 
-    // Choose a projection suitable for Europe
-    var projection = d3.geoMercator()
-        .center([10, 50]) // Adjust to focus on Europe
-        .scale(500)      // Adjust scaling to fit the SVG dimensions
+    // Choose a projection suitable for the US
+    var projection = d3.geoAlbersUsa() // Updated projection for US
+        .scale(1000) // Adjust scaling to fit the SVG dimensions
         .translate([width / 2, height / 2]); // Center the map in the container
 
     // Create a path generator using the projection
@@ -27,55 +26,55 @@ function setMap() {
 
     // Use Promise.all to load data asynchronously
     var promises = [
-        d3.csv("data/nato.csv"), // Load attributes from CSV
-        d3.json("data/EuropeanCountries.topojson") // Load Europe-specific spatial data
+        d3.csv("data/states.csv"), // Load attributes from CSV
+        d3.json("data/states.topojson") // Load US-specific spatial data
     ];
 
     Promise.all(promises).then(function (data) {
         // Assign globally
-        csvData = data[0]; // NATO CSV data
-        var europe = data[1]; // European TopoJSON data
+        csvData = data[0]; // States CSV data
+        var statesTopojson = data[1]; // US TopoJSON data
 
         // Translate TopoJSON to GeoJSON
-        europeanCountries = topojson.feature(europe, europe.objects.european_countries).features; // Update key as needed
-        console.log("Europe Data Structure:", europe);
-        console.log("Available Objects in TopoJSON:", Object.keys(europe.objects));
+        usStates = topojson.feature(statesTopojson, statesTopojson.objects.gz_2010_us_040_00_500k).features; // Updated key as needed
+        console.log("Available Objects in TopoJSON:", Object.keys(statesTopojson.objects));
+        console.log("US TopoJSON Data Structure:", statesTopojson);
 
-        // Match GeoJSON countries with CSV data
-        europeanCountries.forEach(country => {
-            let csvRow = csvData.find(row => row.Country === country.properties.NAME); // Match by country name
-            country.properties.gdpSpending = csvRow ? csvRow["2023e"] : null; // Add GDP data to GeoJSON properties
+        // Match GeoJSON states with CSV data
+        usStates.forEach(state => {
+            let csvRow = csvData.find(row => row.Name === state.properties.name); // Match by state name
+            state.properties.population = csvRow ? csvRow["Population"] : null; // Add population data to GeoJSON properties
         });
 
-        // Create individual paths for each country
-        map.selectAll(".country")
-            .data(europeanCountries) // Bind GeoJSON features
+        // Create individual paths for each state
+        map.selectAll(".state")
+            .data(usStates) // Bind GeoJSON features
             .enter()
             .append("path")
             .attr("class", function (d) {
-                return "country " + d.properties.NAME; // Unique class based on country name
+                return "state " + d.properties.name; // Unique class based on state name
             })
             .attr("d", path) // Apply GeoPath generator
             .style("fill", function (d) {
-                // Style dynamically based on GDP spending
-                if (d.properties.gdpSpending) {
-                    return d.properties.gdpSpending > 1.5 ? "#ff0000" : "#00ff00"; // Example: High GDP in red, low in green
+                // Style dynamically based on population
+                if (d.properties.population) {
+                    return d.properties.population > 5000000 ? "#ff0000" : "#00ff00"; // Example: High population in red, low in green
                 }
-                return "#ccc"; // Default color if GDP data is missing
+                return "#ccc"; // Default color if population data is missing
             });
 
         // Log for debugging
         console.log("CSV Data Loaded:", csvData);
-        console.log("GeoJSON Data Loaded:", europeanCountries[0]);
+        console.log("GeoJSON Data Loaded:", usStates[0]);
 
-        // Log GeoJSON country names here, where the data is ready
-        console.log("GeoJSON Country Names:");
-        europeanCountries.forEach(country => console.log(country.properties.NAME));
+        // Log GeoJSON state names here, where the data is ready
+        console.log("GeoJSON State Names:");
+        usStates.forEach(state => console.log(state.properties.name));
     });
 
     // Access globally after Promise resolves
     setTimeout(() => {
         console.log("CSV Data Globally Accessible:", csvData); // Should now be available
-        console.log("GeoJSON Data Globally Accessible:", europeanCountries ? europeanCountries[0] : "europeanCountries undefined"); // Guard against undefined
+        console.log("GeoJSON Data Globally Accessible:", usStates ? usStates[0] : "usStates undefined"); // Guard against undefined
     }, 1000); // Delay to ensure data is loaded
 }
