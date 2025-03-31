@@ -3,6 +3,35 @@
     let csvData;
     let usStates;
 
+    // Function to create the Natural Breaks color scale
+    function makeColorScale(data, expressed) {
+        var colorClasses = [
+            "#D4B9DA", // Light
+            "#C994C7",
+            "#DF65B0",
+            "#DD1C77",
+            "#980043"  // Dark
+        ];
+
+        // Create a threshold color scale
+        var colorScale = d3.scaleThreshold().range(colorClasses);
+
+        // Build an array of all values for the expressed attribute
+        var domainArray = data.map(d => parseFloat(d[expressed]));
+
+        // Cluster the data using Ckmeans to create natural breaks
+        var clusters = ss.ckmeans(domainArray, colorClasses.length);
+
+        // Create domain from cluster minimums
+        var domainBreaks = clusters.map(cluster => d3.min(cluster));
+        domainBreaks.shift(); // Remove the first minimum to create proper breakpoints
+
+        // Assign the domain to the color scale
+        colorScale.domain(domainBreaks);
+
+        return colorScale;
+    }
+
     // Main function to execute the map setup
     function setMap() {
         // Map frame dimensions
@@ -58,6 +87,9 @@
             // Debugging: Log the updated GeoJSON
             console.log("Joined GeoJSON Features:", usStates);
 
+            // Create the color scale for 2023
+            var colorScale = makeColorScale(csvData, "2023");
+
             // Create individual paths for each state
             map.selectAll(".state")
                 .data(usStates)
@@ -68,12 +100,10 @@
                 })
                 .attr("d", path)
                 .style("fill", function (d) {
-                    if (d.properties["2023"]) {
-                        return d.properties["2023"] > 1000000 ? "#ff0000" : "#00ff00";
-                    }
-                    return "#ccc";
+                    return colorScale(d.properties["2023"]); // Apply color scale for 2023 population
                 });
 
+            console.log("Color scale domain:", colorScale.domain());
             console.log("CSV Data Loaded:", csvData);
             console.log("GeoJSON Data Loaded:", usStates[0]);
         });
